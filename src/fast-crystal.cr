@@ -1,5 +1,7 @@
 require "option_parser"
 require "./benchmarks"
+# Needed for LLVM.default_target_triple
+require "llvm"
 
 module FastCrystal
   extend self
@@ -55,7 +57,17 @@ module FastCrystal
 
     json.document do
       json.object do
-        json.field "Crystal Version", `crystal -v`
+        json.field "System information" do
+          json.object do
+            json.field "crystal_build_commit", Crystal::BUILD_COMMIT
+            json.field "crystal_build_date", Crystal::BUILD_DATE
+            json.field "crystal_version", Crystal::VERSION
+            # Kernel name, release and version
+            json.field "kernel", `uname -srv`
+            json.field "llvm_version", Crystal::LLVM_VERSION
+            json.field "llvm_default_target", LLVM.default_target_triple
+          end
+        end
         json.flush
         run_benchmarks json, io
       end
