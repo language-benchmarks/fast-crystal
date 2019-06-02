@@ -57,19 +57,36 @@ module FastCrystal
 
     json.document do
       json.object do
-        json.field "System information" do
+        json.field "system_information" do
           json.object do
             json.field "crystal_build_commit", Crystal::BUILD_COMMIT
             json.field "crystal_build_date", Crystal::BUILD_DATE
             json.field "crystal_version", Crystal::VERSION
             # Kernel name, release and version
-            json.field "kernel", `uname -srv`
+            json.field "kernel_name", `uname -s`.chomp
+            json.field "kernel_release", `uname -r`.chomp
+            json.field "kernel_version", `uname -v`.chomp
+
+            {% if flag?(:linux) %}\
+            File.each_line "/proc/cpuinfo" do |line|
+              if line.starts_with? "model name"
+                json.field "cpu_model", line.partition(": ").last
+                break
+              end
+            end
+            {% elsif flag?(:darwin) %}\
+            json.field "cpu_model", `sysctl -n machdep.cpu.brand_string`.chomp
+            {% end %}
             json.field "llvm_version", Crystal::LLVM_VERSION
             json.field "llvm_default_target", LLVM.default_target_triple
           end
         end
         json.flush
-        run_benchmarks json, io
+        json.field "benchmarks" do
+          json.object do
+            run_benchmarks json, io
+          end
+        end
       end
     end
 
