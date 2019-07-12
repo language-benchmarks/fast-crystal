@@ -8,9 +8,13 @@ Result of the merge of @icyleaf's [fast-crystal](https://github.com/icyleaf/fast
 
 ## Generate a report
 
-Compile the project
+Before continuing, the project as to be compiled
 
 `crystal build --release src/fast-crystal.cr`
+
+### JSON
+
+Running a benchmark results to a JSON report.
 
 Run all benchmarks
 
@@ -21,6 +25,12 @@ Specific benchmarks can also be selected
 `./fast-crystal --array=bsearch_vs_find,first_vs_index --hash=all`
 
 The reports are in the `./reports` directory by default.
+
+### Markdown
+
+After having run the benchmarks, which result of a JSON file, a markown report can be generated from it to the `STDOUT`:
+
+`./fast-crystal -m -f reports/2019-01-20T18:00:00.json`
 
 ## Contributing
 

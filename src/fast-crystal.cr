@@ -10,10 +10,11 @@ module FastCrystal
   def cli
     benchmarks = Hash(String, String).new
     run_all_benchmarks = false
+    markdown_report = false
 
     io = STDOUT
     # Hash of benchmarks modules with their benchmarks
-    report_destination = Path["./reports", Time.utc.to_s("%Y-%m-%dT%H:%M:%S")]
+    report_file = Path["./reports", Time.utc.to_s("%Y-%m-%dT%H:%M:%S") + ".json"]
 
     OptionParser.parse! do |parser|
       parser.banner = <<-USAGE
@@ -29,8 +30,12 @@ module FastCrystal
         run_all_benchmarks = true
       end
 
-      parser.on "-o", "--output DESTINATION", "JSON report file destination (default: #{report_destination})" do |destination|
-        report_destination = Path.new destination
+      parser.on "-m", "--markdown", "Generate a markdown report from a JSON file" do
+        markdown_report = true
+      end
+
+      parser.on "-f", "--file DESTINATION", "JSON report file (default: #{report_file})" do |destination|
+        report_file = Path.new destination
       end
 
       parser.on "-h", "--help", "Show this help" { puts parser; exit }
@@ -55,11 +60,17 @@ module FastCrystal
       Report.options benchmarks, parser
     end
 
-    # Build JSON report file
-    Dir.mkdir report_destination.dirname if !File.exists? report_destination.dirname
-    File.touch report_destination.to_s if !File.exists? report_destination.to_s
-    File.open report_destination.to_s, "w" do |io|
-      Report.new(STDOUT, run_all_benchmarks, benchmarks).to_pretty_json io
+    if markdown_report
+      File.open report_file.to_s, "r" do |io|
+        Report.from_json(io).to_markdown
+      end
+    else
+      # Build JSON report file
+      Dir.mkdir report_file.dirname if !File.exists? report_file.dirname
+      File.touch report_file.to_s if !File.exists? report_file.to_s
+      File.open report_file.to_s, "w" do |io|
+        Report.new(run_all_benchmarks, benchmarks).to_pretty_json io
+      end
     end
   end
 end

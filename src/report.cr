@@ -4,22 +4,29 @@ class Benchmark::IPS::Entry
   include JSON::Serializable
 
   @[JSON::Field(ignore: true)]
-  @action : ->
+  @action : -> = ->{}
 
   @[JSON::Field(ignore: true)]
   @ran : Bool
+
+  def each_ivar(&block)
+    yield "mean", human_mean
+    yield "iteration time", human_iteration_time
+    yield "relative stddev", relative_stddev.humanize(precision: 4, significant: false)
+    yield "bytes per op", bytes_per_op.humanize(base: 1024)
+  end
 end
 
 struct FastCrystal::Report
   include JSON::Serializable
 
-  @system_information : SystemInformation = SystemInformation.new
+  @system_information : SystemInformation = FastCrystal::Report::SystemInformation.new
   @benchmarks : Hash(String, Hash(String, Array(Benchmark::IPS::Entry)))
 
   @[JSON::Field(ignore: true)]
-  @io : IO
+  @io : IO = STDOUT
 
-  def initialize(@io : IO, run_all_benchmarks : Bool, benchmarks : Hash(String, String))
+  def initialize(run_all_benchmarks : Bool, benchmarks : Hash(String, String), @io : IO = STDOUT)
     @benchmarks = run_benchmarks run_all_benchmarks, benchmarks
   end
 
@@ -59,6 +66,48 @@ struct FastCrystal::Report
     end
   end
 
+  def to_markdown(io : IO = STDOUT)
+    io << "# System Information"
+
+    build_markdown_table io, @system_information
+
+    io << "# Benchmark results\n"
+
+    @benchmarks.each do |class_name, methods|
+      io << "## " << class_name << '\n'
+      methods.each do |method, reports|
+        io << "### " << method << '\n'
+        reports.each do |report|
+          io << "#### " << report.label
+          if report.slower == 1.0
+            io << " (fastest)"
+          else
+            io << " (slower: " << report.slower.humanize(precision: 3, significant: false) << ')'
+          end
+          build_markdown_table io, report
+        end
+      end
+    end
+  end
+
+  private def build_markdown_table(io : IO, object)
+    io << <<-E
+             
+
+   | | |
+   |-|-|
+
+   E
+    object.each_ivar do |name, value|
+      io << '|' << name << '|' << value << "|\n"
+    end
+    io << <<-E
+    | | |
+
+
+    E
+  end
+
   struct SystemInformation
     include JSON::Serializable
 
@@ -90,5 +139,11 @@ struct FastCrystal::Report
     end
     @llvm_version = Crystal::LLVM_VERSION
     @llvm_default_target = LLVM.default_target_triple
+
+    def each_ivar(&block)
+      {% for ivar in @type.instance_vars %}
+      yield {{ivar.stringify.tr "_", " "}}, @{{ivar}}
+      {% end %}
+    end
   end
 end
