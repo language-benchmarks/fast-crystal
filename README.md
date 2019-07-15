@@ -4,13 +4,15 @@ Benchmarks of common idioms in Crystal, to help write more performant code.
 
 Inspired by [fast-ruby](https://github.com/JuanitoFatas/fast-ruby).
 
-Result of the merge of @icyleaf's [fast-crystal](https://github.com/icyleaf/fast-crystal) and @konung's [fast-crystal](https://github.com/konung/fast-crystal)
+Result of the merge of [@icyleaf](https://github.com/icyleaf)'s [fast-crystal](https://github.com/icyleaf/fast-crystal) and [@konung](https://github.com/icyleaf)'s [fast-crystal](https://github.com/konung/fast-crystal)
 
 ## Generate a report
 
 Before continuing, the project as to be compiled
 
 `crystal build --release src/fast-crystal.cr`
+
+To publish your reports and see others, go to the [Language Benchmarks Reports](https://github.com/language-benchmarks/reports) repository.
 
 ### JSON
 
@@ -36,9 +38,6 @@ After having run the benchmarks, which result of a JSON file, a markown report c
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-## Reports
-
-Reports can be published to the [Language Benchmarks Reports](https://github.com/language-benchmarks/reports) repository.
 
 ## License
 
